@@ -1,0 +1,5 @@
+seoul_url: "http://swopenAPI.seoul.go.kr/api/subway"
+file_type: json
+service_name: realtimeStationArrival
+start_index: "0"
+end_index: "5"
