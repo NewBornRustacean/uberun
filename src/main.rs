@@ -1,8 +1,6 @@
 use std::collections::HashMap;
 use std::fs::File;
-use std::str::FromStr;
 
-use hyper::{Client, Uri};
 use serde::{Deserialize, Serialize};
 use serde_yaml::{self};
 
@@ -20,27 +18,56 @@ struct ClientConfig {
     end_index: String,
 }
 
+#[derive(Deserialize, Debug)]
+struct RealTimeArrival {
+    subwayId: Option<String>,
+    updnLine: Option<String>,
+    trainLineNm: Option<String>,
+    statnFid: Option<String>,
+    statnTid: Option<String>,
+    statnId: Option<String>,
+    statnNm: Option<String>,
+    trnsitCo: Option<String>,
+    ordkey: Option<String>,
+    subwayList: Option<String>,
+    statnList: Option<String>,
+    btrainSttus: Option<String>,
+    barvlDt: Option<String>,
+    btrainNo: Option<String>,
+    bstatnId: Option<String>,
+    bstatnNm: Option<String>,
+    recptnDt: Option<String>,
+    arvlMsg2: Option<String>,
+    arvlMsg3: Option<String>,
+    arvlCd: Option<String>,
+}
+
+#[derive(Deserialize, Debug)]
+struct ServerMessage {
+    status: u8,
+    code: Option<String>,
+    message: Option<String>,
+    link: Option<String>,
+    developerMessage: Option<String>,
+    total: u8,
+}
+
+#[derive(Deserialize, Debug)]
+struct ClientResponse {
+    errorMessage: ServerMessage,
+    realtimeArrivalList: Vec<RealTimeArrival>,
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
     // read api-key and make request url
-    let api_key = get_public_api_key("D:/RustWorkspace/uberun/src/public_subway_api_key.yml");
-    let client_config: ClientConfig =
-        get_client_config("D:/RustWorkspace/uberun/src/client_config.yaml");
+    let api_key = get_public_api_key("src/public_subway_api_key.yml");
+    let client_config: ClientConfig = get_client_config("src/client_config.yaml");
 
     let url = make_url(api_key, client_config, "동천".to_string());
-    println!("{}", url);
-    let uri: Uri = Uri::from_str(url.as_str()).unwrap();
+    let response = reqwest::get(url).await?.json::<ClientResponse>().await?;
 
-    let client = Client::new();
-    let res = client.get(uri).await?;
-
-    // And then, if the request gets a response...
-    println!("status: {}", res.status());
-
-    // Concatenate the body stream into a single buffer...
-    let buf = hyper::body::to_bytes(res).await?;
-
-    println!("body: {:?}", buf);
+    println!("{:?}", response);
     return Ok(());
 }
 
