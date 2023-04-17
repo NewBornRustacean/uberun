@@ -36,7 +36,7 @@ async fn main() -> Result<()> {
     rename_rule = "lowercase",
     description = "These commands are supported:"
 )]
-pub enum Command {
+enum Command {
     #[command(description = "display this text.")]
     Help,
     #[command(description = "start to watch")]
