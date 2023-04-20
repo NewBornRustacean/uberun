@@ -1,4 +1,8 @@
+use std::collections::HashMap;
+use std::fs::File;
+
 use serde::{Deserialize, Serialize};
+use urlencoding::encode;
 
 #[derive(Serialize, Deserialize)]
 pub struct ClientConfig {
@@ -47,4 +51,37 @@ pub struct ServerMessage {
 pub struct ClientResponse {
     errorMessage: ServerMessage,
     realtimeArrivalList: Vec<RealTimeArrival>,
+}
+
+pub fn get_public_api_key(api_key_path: &str) -> String {
+    let f = File::open(api_key_path).expect("Could not open file.");
+    let api_key: HashMap<String, String> =
+        serde_yaml::from_reader(f).expect("Could not read values.");
+    return api_key["API_KEY"].to_string();
+}
+
+pub fn get_client_config(clien_config_path: &str) -> ClientConfig {
+    let f = File::open(clien_config_path).expect("Could not open file.");
+    let client_config: ClientConfig = serde_yaml::from_reader(f).expect("Could hot read values");
+    return client_config;
+}
+
+pub fn make_url(
+    api_key: String,
+    client_config: ClientConfig,
+    station_name: String, //station name is KOREAN. have to be converted to ASCII and encoded UTF-8.
+) -> String {
+    let encodec_station_name = encode(&station_name);
+    let full_url = format!(
+        "{}/{}/{}/{}/{}/{}/{}",
+        client_config.seoul_url,
+        api_key,
+        client_config.file_type,
+        client_config.service_name,
+        client_config.start_index,
+        client_config.end_index,
+        encodec_station_name
+    );
+
+    return full_url;
 }
