@@ -48,7 +48,7 @@ pub struct ServerMessage {
 }
 
 #[derive(Deserialize, Debug)]
-pub struct ClientResponse {
+pub struct SeoulResponse {
     errorMessage: ServerMessage,
     realtimeArrivalList: Vec<RealTimeArrival>,
 }
@@ -86,7 +86,7 @@ pub fn make_url(
     return full_url;
 }
 
-pub fn get_arrival_time_in_second(response: ClientResponse) -> String {
+pub fn get_arrival_time_in_second(response: SeoulResponse) -> String {
     let mut arrival_msg = String::new();
 
     for element in response.realtimeArrivalList {
