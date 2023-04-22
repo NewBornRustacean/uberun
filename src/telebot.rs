@@ -31,9 +31,10 @@ pub async fn answer_from_bot(bot: Bot, msg: Message, cmd: Command) -> ResponseRe
         }
 
         Command::Go(station) => {
-            let url: String = make_url(api_key, client_config, station);
-            let response = reqwest::get(url).await?.json::<ClientResponse>().await?;
-            let arrival_msg = get_arrival_time_in_second(response);
+            let url: String = make_url(api_key, client_config, station.trim().to_string());
+            let response: ClientResponse =
+                reqwest::get(url).await?.json::<ClientResponse>().await?;
+            let arrival_msg: String = get_arrival_time_in_second(response);
 
             bot.send_message(msg.chat.id, format!("{arrival_msg}"))
                 .await?
