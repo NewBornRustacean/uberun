@@ -85,3 +85,19 @@ pub fn make_url(
 
     return full_url;
 }
+
+pub fn get_arrival_time_in_second(response: ClientResponse) -> String {
+    let mut arrival_msg = String::new();
+
+    for element in response.realtimeArrivalList {
+        arrival_msg.push_str(
+            format!(
+                "{}: {} sec.\n",
+                element.trainLineNm.unwrap(),
+                element.barvlDt.unwrap(),
+            )
+            .as_str(),
+        );
+    }
+    return arrival_msg;
+}
