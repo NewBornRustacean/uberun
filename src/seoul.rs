@@ -60,8 +60,8 @@ pub fn get_public_api_key(api_key_path: &str) -> String {
     return api_key["API_KEY"].to_string();
 }
 
-pub fn get_client_config(clien_config_path: &str) -> ClientConfig {
-    let f = File::open(clien_config_path).expect("Could not open file.");
+pub fn get_client_config(client_config_path: &str) -> ClientConfig {
+    let f = File::open(client_config_path).expect("Could not open file.");
     let client_config: ClientConfig = serde_yaml::from_reader(f).expect("Could hot read values");
     return client_config;
 }
