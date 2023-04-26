@@ -4,7 +4,7 @@ use std::fs::File;
 use serde::{Deserialize, Serialize};
 use urlencoding::encode;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct ClientConfig {
     pub seoul_url: String,
     pub file_type: String,
