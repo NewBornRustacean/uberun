@@ -1,48 +1,43 @@
-use teloxide::{prelude::*, utils::command::BotCommands};
+use teloxide::{dispatching::dialogue::InMemStorage, prelude::*};
+
+type MyDialogue = Dialogue<State, InMemStorage<State>>;
+type HandlerResult = Result<(), Box<dyn std::error::Error + Send + Sync>>;
 
 use crate::seoul::{
     get_arrival_time_in_second, get_client_config, get_public_api_key, make_url, ClientConfig,
     SeoulResponse,
 };
 
-#[derive(BotCommands, Clone)]
-#[command(
-    rename_rule = "lowercase",
-    description = "These commands are supported:"
-)]
-pub enum Command {
-    #[command(description = "display this text.")]
-    Help,
-    #[command(description = "start to watch")]
-    Go(String),
-    #[command(description = "stop to watch ")]
-    Stop,
+#[derive(Clone, Default)]
+pub enum State {
+    #[default]
+    Start,
+    ReceiveStation,
 }
 
-pub async fn answer_from_bot(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
-    // read api-key and make request url
-    let api_key: String = get_public_api_key("src/public_subway_api_key.yml");
-    let client_config: ClientConfig = get_client_config("src/client_config.yaml");
+pub async fn start(bot: Bot, dialogue: MyDialogue, msg: Message) -> HandlerResult {
+    bot.send_message(msg.chat.id, "어느역이 궁금? 역이름만 보내셈 e.g. 동천")
+        .await?;
+    dialogue.update(State::ReceiveStation).await?;
+    Ok(())
+}
 
-    match cmd {
-        Command::Help => {
-            bot.send_message(msg.chat.id, Command::descriptions().to_string())
-                .await?
-        }
+pub async fn receive_station(bot: Bot, dialogue: MyDialogue, msg: Message) -> HandlerResult {
+    match msg.text() {
+        Some(station_name) => {
+            let api_key: String = get_public_api_key("src/public_subway_api_key.yml");
+            let client_config: ClientConfig = get_client_config("src/client_config.yaml");
 
-        Command::Go(station) => {
-            let url: String = make_url(api_key, client_config, station.trim().to_string());
+            let url = make_url(api_key, client_config, station_name.to_string());
             let response: SeoulResponse = reqwest::get(url).await?.json::<SeoulResponse>().await?;
-            let arrival_msg: String = get_arrival_time_in_second(response);
+            let time_sec = get_arrival_time_in_second(response);
 
-            bot.send_message(msg.chat.id, format!("{arrival_msg}"))
-                .await?
+            bot.send_message(msg.chat.id, format!("{time_sec}")).await?;
         }
-        Command::Stop => {
-            bot.send_message(msg.chat.id, format!("stop to watching."))
-                .await?
+        None => {
+            bot.send_message(msg.chat.id, "역이름! 입력하라그").await?;
         }
-    };
+    }
 
     Ok(())
 }
